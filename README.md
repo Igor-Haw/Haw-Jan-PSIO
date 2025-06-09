@@ -20,6 +20,6 @@ lista funkcjonalności:
     każda z gier w kasynie będzie pobierała od gracza wybraną przez niego ilość pieniędzy i w zależności od wyniku gry odbierała je lub pomnażała
 
 podział pracy
-Igor Hawrylczak: minigra, ruletka, menu główne
+Igor Hawrylczak: minigra, ruletka(zrobione?), menu główne
 Wojciech Janiszewski: oczko, sloty, menu kasyno
 
