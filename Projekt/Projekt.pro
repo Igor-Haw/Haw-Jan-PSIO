@@ -3,7 +3,8 @@ QT = core
 CONFIG += c++17 cmdline
 
 SOURCES += \
-    main.cpp
+    main.cpp \
+    ruletka.cpp
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
@@ -17,3 +18,6 @@ CONFIG(debug, debug|release){
 } else {
     LIBS += -lsfml-audio -lsfml-graphics -lsfml-network -lsfml-system -lsfml-window
 }
+
+HEADERS += \
+    ruletka.h
