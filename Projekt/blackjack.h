@@ -14,6 +14,7 @@ public:
 
     void startGame(int bet);
     void update(sf::RenderWindow& window, int& money);
+    void handleEvent(sf::Event& event, sf::RenderWindow& window, int& money);
     void draw(sf::RenderWindow& window);
     bool isActive() const;
 
@@ -22,6 +23,7 @@ private:
     void hitDealer();
     void updateTexts();
     void checkResult();
+                    void finalizeRound(int& money);
 
     sf::Font& font;
     bool gameStarted;
@@ -32,6 +34,7 @@ private:
     int dealerTotal;
     bool playerStand;
     bool dealerStand;
+                    bool resultChecked;
     std::string result;
     int moneyChange;
 
