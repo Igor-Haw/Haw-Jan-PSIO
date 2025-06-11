@@ -18,7 +18,6 @@ Button::Button(sf::Vector2f position,
     text_.setCharacterSize(20);
     text_.setFillColor(sf::Color::White);
 
-    // wyśrodkowanie napisu
     auto bounds = text_.getLocalBounds();
     text_.setPosition(
         position.x + (size.x - bounds.width) / 2.f - bounds.left,
@@ -41,4 +40,17 @@ bool Button::isMouseOver(sf::RenderWindow& window)
 void Button::setColor(const sf::Color& color)
 {
     shape.setFillColor(color);
+}
+
+bool Button::isClicked(sf::Event& event, sf::RenderWindow& window)
+{
+    if (event.type == sf::Event::MouseButtonPressed &&
+        event.mouseButton.button == sf::Mouse::Left)
+    {
+        sf::Vector2f mousePos = window.mapPixelToCoords(
+            sf::Vector2i(event.mouseButton.x, event.mouseButton.y));
+
+        return shape.getGlobalBounds().contains(mousePos);
+    }
+    return false;
 }
