@@ -10,7 +10,7 @@
 
 class Slots {
 public:
-    Slots(sf::Font& font);
+    explicit Slots(sf::Font& font);
 
     void startGame(int bet);
     void update(sf::RenderWindow& window, int& money);
