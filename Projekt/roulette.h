@@ -1,19 +1,22 @@
-#ifndef RULETKA_H
-#define RULETKA_H
+#ifndef ROULETTE_H
+#define ROULETTE_H
+
+#pragma once
 
 #include <SFML/Graphics.hpp>
 #include <map>
 #include <string>
-#include "button.h"
+#include "Button.h"
 
-class Ruletka {
+class Roulette {
 public:
-    explicit Ruletka(sf::Font& font);
+    explicit Roulette(sf::Font& font);
 
     void startGame(int bet);
     void updateTexts();
     void spin();
     void update(sf::RenderWindow& window, int& money);
+    void handleEvent(const sf::Event& event, sf::RenderWindow& window, int& money);
     void draw(sf::RenderWindow& window);
 
     [[nodiscard]] bool isActive() const;
@@ -38,4 +41,4 @@ private:
     Button backButton;
 };
 
-#endif // RULETKA_H
+#endif // ROULETTE_H
