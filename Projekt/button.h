@@ -22,6 +22,8 @@ public:
 
     void setColor(const sf::Color& color);
 
+    bool isClicked(sf::Event& event, sf::RenderWindow& window);
+
 private:
     sf::RectangleShape shape;
     sf::Text           text_;
