@@ -13,16 +13,17 @@ Slots::Slots(sf::Font& font)
     resultText.setFont(font);
     resultText.setCharacterSize(30);
     resultText.setFillColor(sf::Color::Yellow);
-    resultText.setPosition(300, 300);
+    resultText.setPosition(150,125);
 
-    spinButton = Button(sf::Vector2f(300, 400), sf::Vector2f(150, 50), "Spin", font);
-    backButton = Button(sf::Vector2f(450, 400), sf::Vector2f(150, 50), "Back", font);
+    spinButton = Button(sf::Vector2f(300, 400), sf::Vector2f(150, 50), "Zakrec", font);
+    backButton = Button(sf::Vector2f(450, 400), sf::Vector2f(150, 50), "Powrot", font);
 
     symbols = { "7", "BAR", "Cherry", "Lemon", "Orange", "Plum" };
 
     for (int i = 0; i < 3; ++i) {
         results[i] = 0;
         displayResults[i] = 0;
+
     }
 }
 
@@ -32,11 +33,15 @@ void Slots::startGame(int bet) {
     spinning = false;
     spinFrame = 0;
     resultShown = false;
+    for (int i = 0; i < 3; ++i) {
+        stopped[i] = false;
+        stopFrames[i] = 30 + i * 15;
+    }
     updateTexts();
 }
 
 void Slots::updateTexts() {
-    betText.setString("Bet: " + std::to_string(betAmount));
+    betText.setString("Zaklad: " + std::to_string(betAmount)+"$");
 }
 
 void Slots::spin() {
@@ -48,19 +53,20 @@ void Slots::spin() {
 
     for (int i = 0; i < 3; ++i) {
         results[i] = rand() % symbols.size();
-        displayResults[i] = rand() % symbols.size();
+        stopped[i] = false;
+
     }
 }
 
 void Slots::checkResult() {
     if (results[0] == results[1] && results[1] == results[2]) {
-        result = "JACKPOT! Won " + std::to_string(betAmount * 10);
+        result = "JACKPOT! Wygrana " + std::to_string(betAmount * 10)+"$";
         moneyChange = betAmount * 10;
     } else if (results[0] == results[1] || results[1] == results[2] || results[0] == results[2]) {
-        result = "WIN! Two same! Won " + std::to_string(betAmount * 2);
+        result = "WYGRALES! Dwa takie same! Wygrana " + std::to_string(betAmount * 2)+"$";
         moneyChange = betAmount * 2;
     } else {
-        result = "LOSE! Lost " + std::to_string(betAmount);
+        result = "PRZEGRANA! Przegrales " + std::to_string(betAmount)+"$";
         moneyChange = -betAmount;
     }
 
@@ -71,40 +77,49 @@ void Slots::checkResult() {
 void Slots::update(sf::RenderWindow& window, int& money) {
     if (!gameStarted) return;
 
+    // Animacja spinowania
     if (spinning) {
         spinFrame++;
 
         if (spinFrame % 5 == 0) {
             for (int i = 0; i < 3; ++i) {
-                if (spinFrame < 30 + i * 10) {
+                if (!stopped[i]) {
                     displayResults[i] = (displayResults[i] + 1) % symbols.size();
                 }
             }
         }
 
-        if (spinFrame >= 60) {
+        for (int i = 0; i < 3; ++i) {
+            if (!stopped[i] && spinFrame >= stopFrames[i]) {
+                displayResults[i] = results[i];
+                stopped[i] = true;
+            }
+        }
+
+        // Gdy wszystkie zatrzymane
+        if (stopped[0] && stopped[1] && stopped[2]) {
             spinning = false;
             checkResult();
             money += moneyChange;
         }
     }
 
-    if (spinButton.isMouseOver(window)) {
-        spinButton.setColor(sf::Color(100, 100, 100));
-        if (sf::Mouse::isButtonPressed(sf::Mouse::Left) && !spinning) {
+    // Kolorowanie przycisków
+    spinButton.setColor(spinButton.isMouseOver(window) ? sf::Color(100, 100, 100) : sf::Color(70, 70, 70));
+    backButton.setColor(backButton.isMouseOver(window) ? sf::Color(100, 100, 100) : sf::Color(70, 70, 70));
+}
+
+void Slots::handleEvent(sf::Event& event, sf::RenderWindow& window, int& money) {
+    if (!gameStarted || spinning) return;
+
+    if (event.type == sf::Event::MouseButtonPressed && event.mouseButton.button == sf::Mouse::Left) {
+        if (spinButton.isMouseOver(window)) {
             spin();
         }
-    } else {
-        spinButton.setColor(sf::Color(70, 70, 70));
-    }
 
-    if (backButton.isMouseOver(window)) {
-        backButton.setColor(sf::Color(100, 100, 100));
-        if (sf::Mouse::isButtonPressed(sf::Mouse::Left)) {
+        if (backButton.isMouseOver(window)) {
             gameStarted = false;
         }
-    } else {
-        backButton.setColor(sf::Color(70, 70, 70));
     }
 }
 
