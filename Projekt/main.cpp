@@ -1,47 +1,117 @@
-#include <SFML/Window.hpp>
 #include <SFML/Graphics.hpp>
+#include <SFML/Audio.hpp>
+#include <string>
+#include <cstdlib>
+#include <ctime>
+
+#include "button.h"
+#include "clickergame.h"
+#include "casino.h"
+
 
 int main() {
-    // create the window
-    sf::RenderWindow window(sf::VideoMode(800, 600), "My window");
+    srand(time(NULL));
 
-    // create some shapes
-    sf::CircleShape circle(100.0);
-    circle.setPosition(100.0, 300.0);
-    circle.setFillColor(sf::Color(100, 250, 50));
+    sf::RenderWindow window(sf::VideoMode(800, 600), "PGC");
+    window.setFramerateLimit(60);
 
-    sf::RectangleShape rectangle(sf::Vector2f(120.0, 60.0));
-    rectangle.setPosition(500.0, 400.0);
-    rectangle.setFillColor(sf::Color(100, 50, 250));
+    // Ładowanie czcionki
+    sf::Font font;
+    font.loadFromFile("times.ttf");
 
-    sf::ConvexShape triangle;
-    triangle.setPointCount(3);
-    triangle.setPoint(0, sf::Vector2f(0.0, 0.0));
-    triangle.setPoint(1, sf::Vector2f(0.0, 100.0));
-    triangle.setPoint(2, sf::Vector2f(140.0, 40.0));
-    triangle.setOutlineColor(sf::Color::Red);
-    triangle.setOutlineThickness(5);
-    triangle.setPosition(600.0, 100.0);
+    // Inicjalizacja komponentów gry
+    ClickerGame clickerGame(font);
+    Casino casino(font);
 
-    // run the program as long as the window is open
+    // Przyciski menu głównego
+    Button minigameButton(sf::Vector2f(300, 200), sf::Vector2f(200, 50), "Zarabianie", font);
+    Button casinoButton(sf::Vector2f(300, 300), sf::Vector2f(200, 50), "Kasyno", font);
+    Button exitButton(sf::Vector2f(300, 400), sf::Vector2f(200, 50), "Wyjdz z gry", font);
+
+    // Tekst tytułu
+    sf::Text titleText("POZNAN GRANDE CA$INO", font, 50);
+    titleText.setFillColor(sf::Color::Yellow);
+    sf::FloatRect textBounds = titleText.getLocalBounds();
+    titleText.setOrigin(textBounds.left + textBounds.width / 2.0f, textBounds.top + textBounds.height / 2.0f);
+    titleText.setPosition(800 / 2.0f, 100); // wyśrodkowany poziomo, 100px od góry
+
+    bool casinoWasActive = false;
+
     while (window.isOpen()) {
-        // check all the window's events that were triggered since the last iteration of the loop
         sf::Event event;
         while (window.pollEvent(event)) {
-            // "close requested" event: we close the window
             if (event.type == sf::Event::Closed)
                 window.close();
+
+            if (clickerGame.isActive()) {
+                clickerGame.handleEvent(event, window);
+            }
+
+            if (casino.isActive()) {
+                casino.handleEvent(event, window);
+            }
+
+            if (!clickerGame.isActive() && !casino.isActive()) {
+                if (event.type == sf::Event::MouseButtonPressed && event.mouseButton.button == sf::Mouse::Left) {
+                    if (minigameButton.isMouseOver(window)) {
+                        clickerGame.startGame();
+                    }
+                    if (casinoButton.isMouseOver(window)) {
+                        casino.start(clickerGame.getMoney());
+                    }
+                    if (exitButton.isMouseOver(window)) {
+                        window.close();
+                    }
+                }
+            }
+
         }
 
-        // clear the window with black color
-        window.clear(sf::Color::Black);
+        window.clear();
 
-        // draw everything here...
-        window.draw(circle);
-        window.draw(rectangle);
-        window.draw(triangle);
+        if (!clickerGame.isActive() && !casino.isActive()) {
+            // Rysowanie menu głównego
+            window.draw(titleText);
+            minigameButton.draw(window);
+            casinoButton.draw(window);
+            exitButton.draw(window);
 
-        // end the current frame
+            if (minigameButton.isMouseOver(window)) {
+                minigameButton.setColor(sf::Color(100, 100, 100));
+
+            } else {
+                minigameButton.setColor(sf::Color(70, 70, 70));
+            }
+
+            if (casinoButton.isMouseOver(window)) {
+                casinoButton.setColor(sf::Color(100, 100, 100));
+
+            } else {
+                casinoButton.setColor(sf::Color(70, 70, 70));
+            }
+
+            if (exitButton.isMouseOver(window)) {
+                exitButton.setColor(sf::Color(100, 100, 100));
+
+            } else {
+                exitButton.setColor(sf::Color(70, 70, 70));
+            }
+        }
+        else if (clickerGame.isActive()) {
+            clickerGame.update(window);
+            clickerGame.draw(window);
+        }
+        else if (casino.isActive()) {
+            casino.update(window);
+            casino.draw(window);
+        }
+
+        // wykrywamy wyjście z kasyna
+        if (casinoWasActive && !casino.isActive()) {
+            clickerGame.setMoney(casino.getMoney());
+        }
+        casinoWasActive = casino.isActive();  // aktualizujemy stan
+
         window.display();
     }
 
