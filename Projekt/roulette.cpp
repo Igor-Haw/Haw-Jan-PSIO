@@ -1,7 +1,7 @@
-#include "Ruletka.h"
+#include "Roulette.h"
 #include <cstdlib>
 
-Ruletka::Ruletka(sf::Font& font)
+Roulette::Roulette(sf::Font& font)
     : font(font),
     gameStarted(false),
     resultShown(false),
@@ -21,7 +21,7 @@ Ruletka::Ruletka(sf::Font& font)
     resultText.setFont(font);
     resultText.setCharacterSize(30);
     resultText.setFillColor(sf::Color::Yellow);
-    resultText.setPosition(300.f, 300.f);
+    resultText.setPosition(150.f, 500.f);
 
     numberText.setFont(font);
     numberText.setCharacterSize(24);
@@ -33,10 +33,8 @@ Ruletka::Ruletka(sf::Font& font)
     colorText.setFillColor(sf::Color::White);
     colorText.setPosition(50.f, 150.f);
 
-
-    spinButton = Button(sf::Vector2f(300.f, 400.f), sf::Vector2f(150.f, 50.f), "Spin", font);
-    backButton = Button(sf::Vector2f(450.f, 400.f), sf::Vector2f(150.f, 50.f), "Back", font);
-
+    spinButton = Button(sf::Vector2f(300.f, 400.f), sf::Vector2f(150.f, 50.f), "Zakrec", font);
+    backButton = Button(sf::Vector2f(450.f, 400.f), sf::Vector2f(150.f, 50.f), "Powrot", font);
 
     for (int i = 0; i <= 36; ++i) {
         if (i == 0) {
@@ -49,7 +47,7 @@ Ruletka::Ruletka(sf::Font& font)
     }
 }
 
-void Ruletka::startGame(int bet) {
+void Roulette::startGame(int bet) {
     betAmount = bet;
     gameStarted = true;
     resultShown = false;
@@ -59,118 +57,100 @@ void Ruletka::startGame(int bet) {
     updateTexts();
 }
 
-void Ruletka::updateTexts() {
-    betText.setString("Bet: " + std::to_string(betAmount));
+void Roulette::updateTexts() {
+    betText.setString("Zaklad: " + std::to_string(betAmount)+"$");
 
-    std::string numberStr = "Number: ";
-    numberStr += (selectedNumber == -1) ? "Not selected" : std::to_string(selectedNumber);
+    std::string numberStr = "Numer: ";
+    numberStr += (selectedNumber == -1) ? "Nie wybrano" : std::to_string(selectedNumber);
     numberText.setString(numberStr);
 
-    std::string colorStr = "Color: ";
+    std::string colorStr = "Kolor: ";
     if (selectedColor == -1) {
-        colorStr += "Not selected";
+        colorStr += "Nie wybrano";
     } else if (selectedColor == 0) {
-        colorStr += "Red";
+        colorStr += "Czerwony";
     } else if (selectedColor == 1) {
-        colorStr += "Black";
+        colorStr += "Czarny";
     } else {
-        colorStr += "Green";
+        colorStr += "Zielony";
     }
     colorText.setString(colorStr);
 }
 
-void Ruletka::spin() {
+void Roulette::spin() {
     if (selectedNumber == -1 && selectedColor == -1) return;
 
-    resultNumber = rand() % 37;          // 0–36
+    resultNumber = rand() % 37;
     resultColor  = numberColors[resultNumber];
 
-    // Sprawdzenie wyniku zakładu
     if (selectedNumber != -1 && selectedNumber == resultNumber) {
-        // Trafienie liczby – 35:1
         moneyChange = betAmount * 35;
-        result = "WIN! Number " + std::to_string(resultNumber) + "! Won " + std::to_string(moneyChange);
+        result = "WYGRALES!  Numer " + std::to_string(resultNumber) + "!  Wygrana " + std::to_string(moneyChange)+"$";
     } else if (selectedColor != -1 && selectedColor == resultColor) {
-        // Trafienie koloru – 1:1
         moneyChange = betAmount;
-        result = "WIN! Color match! Won " + std::to_string(moneyChange);
+        result = "WYGRALES!  Dobry kolor!  Wygrana " + std::to_string(moneyChange)+"$";
     } else {
-        // Przegrana
         moneyChange = -betAmount;
-        result = "LOSE! Result: " + std::to_string(resultNumber) + ". Lost " + std::to_string(betAmount);
+        result = "PZEGRALES!  Wylosowano: " + std::to_string(resultNumber) + "  Przegrana " + std::to_string(betAmount);
     }
 
     resultText.setString(result);
     resultShown = true;
 }
 
-void Ruletka::update(sf::RenderWindow& window, int& money) {
+void Roulette::update(sf::RenderWindow& window, int& /*money*/) {
     if (!gameStarted) return;
+
+    spinButton.setColor(spinButton.isMouseOver(window) ? sf::Color(100, 100, 100) : sf::Color(70, 70, 70));
+    backButton.setColor(backButton.isMouseOver(window) ? sf::Color(100, 100, 100) : sf::Color(70, 70, 70));
+}
+
+void Roulette::handleEvent(const sf::Event& event, sf::RenderWindow& window, int& money) {
+    if (!gameStarted || event.type != sf::Event::MouseButtonPressed || event.mouseButton.button != sf::Mouse::Left)
+        return;
+
+    sf::Vector2f mousePos = window.mapPixelToCoords(sf::Mouse::getPosition(window));
 
     for (int i = 0; i <= 36; ++i) {
         int row = i / 12;
         int col = i % 12;
-        sf::RectangleShape numberRect(sf::Vector2f(40.f, 40.f));
-        numberRect.setPosition(50.f + col * 45.f, 200.f + row * 45.f);
-
-        if (numberRect.getGlobalBounds().contains(window.mapPixelToCoords(sf::Mouse::getPosition(window)))) {
-            numberRect.setOutlineThickness(2.f);
-            numberRect.setOutlineColor(sf::Color::Yellow);
-
-            if (sf::Mouse::isButtonPressed(sf::Mouse::Left)) {
-                selectedNumber = i;
-                selectedColor = -1;
-                updateTexts();
-            }
-        }
-    }
-
-    sf::RectangleShape redRect  (sf::Vector2f(100.f, 40.f)); redRect  .setPosition(50.f , 350.f);
-    sf::RectangleShape blackRect(sf::Vector2f(100.f, 40.f)); blackRect.setPosition(160.f, 350.f);
-
-    if (redRect.getGlobalBounds().contains(window.mapPixelToCoords(sf::Mouse::getPosition(window)))) {
-        redRect.setOutlineThickness(2.f);
-        redRect.setOutlineColor(sf::Color::Yellow);
-
-        if (sf::Mouse::isButtonPressed(sf::Mouse::Left)) {
-            selectedColor = 0;
-            selectedNumber = -1;
+        sf::FloatRect rectBounds(50.f + col * 45.f, 200.f + row * 45.f, 40.f, 40.f);
+        if (rectBounds.contains(mousePos)) {
+            selectedNumber = i;
+            selectedColor = -1;
             updateTexts();
+            return;
         }
     }
 
-    if (blackRect.getGlobalBounds().contains(window.mapPixelToCoords(sf::Mouse::getPosition(window)))) {
-        blackRect.setOutlineThickness(2.f);
-        blackRect.setOutlineColor(sf::Color::Yellow);
-
-        if (sf::Mouse::isButtonPressed(sf::Mouse::Left)) {
-            selectedColor = 1;
-            selectedNumber = -1;
-            updateTexts();
-        }
+    sf::FloatRect redRect(50.f, 380.f, 100.f, 40.f);
+    if (redRect.contains(mousePos)) {
+        selectedColor = 0;
+        selectedNumber = -1;
+        updateTexts();
+        return;
     }
 
-    if (spinButton.isMouseOver(window)) {
-        spinButton.setColor(sf::Color(100, 100, 100));
-        if (sf::Mouse::isButtonPressed(sf::Mouse::Left) && !resultShown && (selectedNumber != -1 || selectedColor != -1)) {
-            spin();
-            money += moneyChange;
-        }
-    } else {
-        spinButton.setColor(sf::Color(70, 70, 70));
+    sf::FloatRect blackRect(160.f, 380.f, 100.f, 40.f);
+    if (blackRect.contains(mousePos)) {
+        selectedColor = 1;
+        selectedNumber = -1;
+        updateTexts();
+        return;
+    }
+
+    if (spinButton.isMouseOver(window) && !resultShown && (selectedNumber != -1 || selectedColor != -1)) {
+        spin();
+        money += moneyChange;
+        return;
     }
 
     if (backButton.isMouseOver(window)) {
-        backButton.setColor(sf::Color(100, 100, 100));
-        if (sf::Mouse::isButtonPressed(sf::Mouse::Left)) {
-            gameStarted = false;
-        }
-    } else {
-        backButton.setColor(sf::Color(70, 70, 70));
+        gameStarted = false;
     }
 }
 
-void Ruletka::draw(sf::RenderWindow& window) {
+void Roulette::draw(sf::RenderWindow& window) {
     if (!gameStarted) return;
 
     window.draw(betText);
@@ -200,9 +180,8 @@ void Ruletka::draw(sf::RenderWindow& window) {
         window.draw(numberLabel);
     }
 
-
     sf::RectangleShape redRect(sf::Vector2f(100.f, 40.f));
-    redRect.setPosition(50.f, 350.f);
+    redRect.setPosition(50.f, 380.f);
     redRect.setFillColor(sf::Color::Red);
     if (selectedColor == 0) {
         redRect.setOutlineThickness(2.f);
@@ -211,7 +190,7 @@ void Ruletka::draw(sf::RenderWindow& window) {
     window.draw(redRect);
 
     sf::RectangleShape blackRect(sf::Vector2f(100.f, 40.f));
-    blackRect.setPosition(160.f, 350.f);
+    blackRect.setPosition(160.f, 380.f);
     blackRect.setFillColor(sf::Color::Black);
     if (selectedColor == 1) {
         blackRect.setOutlineThickness(2.f);
@@ -219,8 +198,8 @@ void Ruletka::draw(sf::RenderWindow& window) {
     }
     window.draw(blackRect);
 
-    sf::Text redText("RED", font, 16);   redText.setPosition(75.f , 360.f); window.draw(redText);
-    sf::Text blackText("BLACK", font, 16); blackText.setPosition(175.f, 360.f); window.draw(blackText);
+    sf::Text redText("CZERWONY", font, 16); redText.setPosition(55.f, 390.f); window.draw(redText);
+    sf::Text blackText("CZARNY", font, 16); blackText.setPosition(175.f, 390.f); window.draw(blackText);
 
     if (resultShown) window.draw(resultText);
 
@@ -228,6 +207,6 @@ void Ruletka::draw(sf::RenderWindow& window) {
     backButton.draw(window);
 }
 
-bool Ruletka::isActive() const {
+bool Roulette::isActive() const {
     return gameStarted;
 }
