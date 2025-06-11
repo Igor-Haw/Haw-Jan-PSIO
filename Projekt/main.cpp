@@ -33,7 +33,7 @@ int main() {
     titleText.setFillColor(sf::Color::Yellow);
     sf::FloatRect textBounds = titleText.getLocalBounds();
     titleText.setOrigin(textBounds.left + textBounds.width / 2.0f, textBounds.top + textBounds.height / 2.0f);
-    titleText.setPosition(800 / 2.0f, 100); // wyśrodkowany poziomo, 100px od góry
+    titleText.setPosition(800 / 2.0f, 100);
 
     bool casinoWasActive = false;
 
