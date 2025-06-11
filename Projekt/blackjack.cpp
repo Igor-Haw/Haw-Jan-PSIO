@@ -25,9 +25,9 @@ Blackjack::Blackjack(sf::Font& font)
     resultText.setFillColor(sf::Color::Yellow);
     resultText.setPosition(300, 300);
 
-    hitButton = Button(sf::Vector2f(50, 400), sf::Vector2f(150, 50), "Hit", font);
-    standButton = Button(sf::Vector2f(250, 400), sf::Vector2f(150, 50), "Stand", font);
-    backButton = Button(sf::Vector2f(450, 400), sf::Vector2f(150, 50), "Back", font);
+    hitButton = Button(sf::Vector2f(50, 400), sf::Vector2f(150, 50), "Dobierz", font);
+    standButton = Button(sf::Vector2f(250, 400), sf::Vector2f(150, 50), "Nie dobieraj", font);
+    backButton = Button(sf::Vector2f(450, 400), sf::Vector2f(150, 50), "Powrot", font);
 }
 
 void Blackjack::startGame(int bet) {
@@ -39,6 +39,7 @@ void Blackjack::startGame(int bet) {
     gameStarted = true;
     playerStand = false;
     dealerStand = false;
+            resultChecked = false;
 
     hitPlayer();
     hitDealer();
@@ -61,14 +62,14 @@ void Blackjack::hitDealer() {
 }
 
 void Blackjack::updateTexts() {
-    betText.setString("Bet: " + std::to_string(betAmount));
+    betText.setString("Zaklad: " + std::to_string(betAmount)+"$");
 
-    std::string playerStr = "Player: ";
+    std::string playerStr = "Gracz: ";
     for (int card : playerCards) playerStr += std::to_string(card) + " ";
     playerStr += "(" + std::to_string(playerTotal) + ")";
     playerText.setString(playerStr);
 
-    std::string dealerStr = "Dealer: ";
+    std::string dealerStr = "Krupier: ";
     if (!playerStand && !dealerStand) {
         dealerStr += std::to_string(dealerCards[0]) + " ?";
     } else {
@@ -80,22 +81,30 @@ void Blackjack::updateTexts() {
 
 void Blackjack::checkResult() {
     if (playerTotal > 21) {
-        result = "You bust! Lost " + std::to_string(betAmount);
+        result = "Fura! Przegrales " + std::to_string(betAmount)+"$";
         moneyChange = -betAmount;
     } else if (dealerTotal > 21) {
-        result = "Dealer bust! Won " + std::to_string(betAmount);
+        result = "Wygrales " + std::to_string(betAmount)+"$";
         moneyChange = betAmount;
     } else if (playerTotal > dealerTotal) {
-        result = "You win! Won " + std::to_string(betAmount);
+        result = "Wygrales " + std::to_string(betAmount)+"$";
         moneyChange = betAmount;
     } else if (playerTotal < dealerTotal) {
-        result = "You lose! Lost " + std::to_string(betAmount);
+        result = "Przegrales " + std::to_string(betAmount)+"$";
         moneyChange = -betAmount;
     } else {
-        result = "Push! Bet returned";
+        result = "Remis!";
         moneyChange = 0;
     }
     resultText.setString(result);
+}
+
+void Blackjack::finalizeRound(int& money) {
+    if (!resultChecked) {
+        checkResult();
+        money += moneyChange;
+        resultChecked = true;
+    }
 }
 
 void Blackjack::update(sf::RenderWindow& window, int& money) {
@@ -106,48 +115,43 @@ void Blackjack::update(sf::RenderWindow& window, int& money) {
             hitDealer();
         } else {
             dealerStand = true;
-            checkResult();
-            money += moneyChange;
+
+            finalizeRound(money);
         }
         updateTexts();
     }
 
-    if (hitButton.isMouseOver(window)) {
-        hitButton.setColor(sf::Color(100, 100, 100));
-        if (sf::Mouse::isButtonPressed(sf::Mouse::Left) && !playerStand) {
+    hitButton.setColor(hitButton.isMouseOver(window) ? sf::Color(100, 100, 100) : sf::Color(70, 70, 70));
+    standButton.setColor(standButton.isMouseOver(window) ? sf::Color(100, 100, 100) : sf::Color(70, 70, 70));
+    backButton.setColor(backButton.isMouseOver(window) ? sf::Color(100, 100, 100) : sf::Color(70, 70, 70));
+}
+
+void Blackjack::handleEvent(sf::Event& event, sf::RenderWindow& window, int& money) {
+    if (!gameStarted) return;
+
+    if (event.type == sf::Event::MouseButtonPressed && event.mouseButton.button == sf::Mouse::Left) {
+        if (hitButton.isClicked(event, window) && !playerStand) {
             hitPlayer();
             if (playerTotal >= 21) {
                 playerStand = true;
-                checkResult();
-                money += moneyChange;
+
+                finalizeRound(money);
             }
             updateTexts();
         }
-    } else {
-        hitButton.setColor(sf::Color(70, 70, 70));
-    }
 
-    if (standButton.isMouseOver(window)) {
-        standButton.setColor(sf::Color(100, 100, 100));
-        if (sf::Mouse::isButtonPressed(sf::Mouse::Left) && !playerStand) {
+        if (standButton.isClicked(event, window) && !playerStand) {
             playerStand = true;
             while (dealerTotal < 17) hitDealer();
             dealerStand = true;
-            checkResult();
-            money += moneyChange;
+
+            finalizeRound(money);
             updateTexts();
         }
-    } else {
-        standButton.setColor(sf::Color(70, 70, 70));
-    }
 
-    if (backButton.isMouseOver(window)) {
-        backButton.setColor(sf::Color(100, 100, 100));
-        if (sf::Mouse::isButtonPressed(sf::Mouse::Left)) {
+        if (backButton.isClicked(event, window)) {
             gameStarted = false;
         }
-    } else {
-        backButton.setColor(sf::Color(70, 70, 70));
     }
 }
 
@@ -168,3 +172,4 @@ void Blackjack::draw(sf::RenderWindow& window) {
 bool Blackjack::isActive() const {
     return gameStarted;
 }
+
