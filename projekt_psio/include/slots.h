@@ -1,4 +1,4 @@
-#ifndef SLOTS_H
+plicit#ifndef SLOTS_H
 #define SLOTS_H
 
 #pragma once
@@ -11,7 +11,7 @@
 
 class Slots :public MiniGame{
 public:
-    Slots(sf::Font& font);
+    explicit Slots(sf::Font& font);
 
     void startGame(int bet);
     void update(sf::RenderWindow& window, int& money);
