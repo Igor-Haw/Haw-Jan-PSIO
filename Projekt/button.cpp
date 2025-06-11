@@ -18,6 +18,7 @@ Button::Button(sf::Vector2f position,
     text_.setCharacterSize(20);
     text_.setFillColor(sf::Color::White);
 
+    // wyśrodkowanie napisu
     auto bounds = text_.getLocalBounds();
     text_.setPosition(
         position.x + (size.x - bounds.width) / 2.f - bounds.left,
